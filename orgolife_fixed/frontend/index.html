@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrgoLife — Organ Donation Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   CSS VARIABLES — OrgoLife Palette (from theme)
+══════════════════════════════════════════════════ */
+:root {
+  --crimson:        #8B1A1A;
+  --crimson-deep:   #5C0E0E;
+  --crimson-mid:    #A12424;
+  --crimson-light:  #C94040;
+  --crimson-pale:   #FEF2F2;
+  --rose:           #E8736B;
+  --gold:           #C9A84C;
+  --gold-deep:      #A07830;
+  --gold-light:     #F0D080;
+  --gold-pale:      #FFFBEB;
+  --ivory:          #FBF7F1;
+  --warm-white:     #FFFEF9;
+  --ink:            #1A1008;
+  --ink-muted:      #4A3728;
+  --ink-subtle:     #7A6555;
+  --ink-faint:      #B0A090;
+  --sage:           #2D5A3D;
+  --sage-mid:       #3D7A52;
+  --sage-light:     #E8F4EC;
+  --danger:         #B91C1C;
+  --danger-bg:      #FEF2F2;
+  --border:         #E8DDD2;
+  --border-subtle:  #F0E8DF;
+  --shadow-xs:      0 1px 4px rgba(26,16,8,0.06);
+  --shadow:         0 2px 20px rgba(26,16,8,0.09);
+  --shadow-md:      0 4px 28px rgba(26,16,8,0.12);
+  --shadow-lg:      0 8px 48px rgba(26,16,8,0.16);
+  --radius:         12px;
+  --radius-lg:      18px;
+  --radius-xl:      24px;
+  --font-display:   'Playfair Display', Georgia, serif;
+  --font-body:      'DM Sans', system-ui, sans-serif;
+  --api-base:       /api/v1;
+}
+
+/* ══════════════════════════════════════════════════ RESET */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--ivory);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE ROUTING SYSTEM
+══════════════════════════════════════════════════ */
+.page { display: none; min-height: calc(100vh - 64px); }
+.page.active { display: block; animation: pageIn .35s cubic-bezier(.22,.68,0,1.2); }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════
+   TOP NAV
+══════════════════════════════════════════════════ */
+.top-nav {
+  background: var(--crimson-deep);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 20px rgba(92,14,14,0.45);
+}
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold-light);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  user-select: none;
+}
+.nav-brand-icon {
+  width: 34px; height: 34px;
+  background: rgba(201,168,76,0.18);
+  border: 1.5px solid rgba(201,168,76,0.4);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+.nav-pills { display: flex; gap: 6px; align-items: center; }
+.nav-pill {
+  padding: 7px 18px;
+  border-radius: 50px;
+  border: 1.5px solid rgba(240,208,128,0.28);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+  font-family: var(--font-body);
+}
+.nav-pill:hover { background: rgba(240,208,128,0.12); color: #fff; border-color: rgba(240,208,128,0.5); }
+.nav-pill.active { background: var(--gold); color: var(--crimson-deep); border-color: var(--gold); font-weight: 600; }
+.nav-pill.cta { background: var(--crimson-light); color: #fff; border-color: var(--crimson-light); }
+.nav-pill.cta:hover { background: var(--rose); border-color: var(--rose); }
+#nav-user-info { color: rgba(255,255,255,0.7); font-size: 13px; display: none; align-items: center; gap: 10px; }
+#nav-user-info.visible { display: flex; }
+#nav-user-name { color: var(--gold-light); font-weight: 600; }
+.nav-logout-btn {
+  padding: 5px 14px; border-radius: 50px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.8); font-size: 12px; cursor: pointer;
+  transition: all .2s; font-family: var(--font-body);
+}
+.nav-logout-btn:hover { background: rgba(185,28,28,0.5); border-color: transparent; color: #fff; }
+
+/* ══════════════════════════════════════════════════
+   HERO / LANDING
+══════════════════════════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg, var(--crimson-deep) 0%, var(--crimson) 50%, #7A1010 100%);
+  min-height: 560px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; padding: 80px 2rem;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(201,168,76,0.08) 0%, transparent 70%);
+}
+.hero-ornament {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.12);
+}
+.hero-ornament.o1 { width: 600px; height: 600px; top: -200px; right: -150px; }
+.hero-ornament.o2 { width: 400px; height: 400px; bottom: -100px; left: -80px; border-color: rgba(201,168,76,0.07); }
+.hero-content { text-align: center; position: relative; z-index: 1; max-width: 700px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3);
+  padding: 6px 18px; border-radius: 50px;
+  color: var(--gold-light); font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 28px;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  color: #fff; line-height: 1.12; font-weight: 700;
+  margin-bottom: 20px;
+}
+.hero h1 em { color: var(--gold-light); font-style: italic; }
+.hero p {
+  color: rgba(255,255,255,0.72); font-size: 1.1rem;
+  max-width: 500px; margin: 0 auto 40px;
+}
+.hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
+  padding: 14px 34px; border-radius: 50px;
+  background: var(--gold); color: var(--crimson-deep);
+  font-weight: 700; font-size: 15px; cursor: pointer;
+  border: none; font-family: var(--font-body);
+  transition: all .25s; box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 6px 28px rgba(201,168,76,0.5); }
+.btn-outline {
+  padding: 14px 34px; border-radius: 50px;
+  background: transparent; color: #fff;
+  font-weight: 600; font-size: 15px; cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.4); font-family: var(--font-body);
+  transition: all .25s;
+}
+.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
+
+/* ══════════════════════════════════════════════════
+   STATS STRIP
+══════════════════════════════════════════════════ */
+.stats-strip {
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 2rem;
+  display: flex; justify-content: center; gap: 0;
+}
+.stat-item {
+  text-align: center; padding: 0 48px;
+  border-right: 1px solid var(--border-subtle);
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 2rem; color: var(--crimson); font-weight: 700;
+}
+.stat-label { color: var(--ink-subtle); font-size: 12px; font-weight: 500; letter-spacing: 0.04em; margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════
+   SECTION WRAPPERS
+══════════════════════════════════════════════════ */
+.section { padding: 72px 2rem; max-width: 1100px; margin: 0 auto; }
+.section-title {
+  font-family: var(--font-display);
+  font-size: 2rem; color: var(--ink); font-weight: 700; margin-bottom: 8px;
+}
+.section-sub { color: var(--ink-subtle); font-size: 15px; margin-bottom: 40px; }
+
+/* ══════════════════════════════════════════════════
+   ROLE CARDS (Landing)
+══════════════════════════════════════════════════ */
+.role-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.role-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  cursor: pointer;
+  transition: all .28s cubic-bezier(.22,.68,0,1.2);
+  position: relative; overflow: hidden;
+}
+.role-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--gradient, linear-gradient(90deg, var(--crimson), var(--gold)));
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .3s ease;
+}
+.role-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--border-subtle); }
+.role-card:hover::before { transform: scaleX(1); }
+.role-card.donor { --gradient: linear-gradient(90deg, var(--crimson), var(--rose)); }
+.role-card.receiver { --gradient: linear-gradient(90deg, var(--sage), var(--sage-mid)); }
+.role-card.admin { --gradient: linear-gradient(90deg, var(--gold-deep), var(--gold)); }
+.role-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; margin-bottom: 20px;
+}
+.role-card.donor .role-icon { background: var(--crimson-pale); }
+.role-card.receiver .role-icon { background: var(--sage-light); }
+.role-card.admin .role-icon { background: var(--gold-pale); }
+.role-card h3 { font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 10px; }
+.role-card p { color: var(--ink-subtle); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+.role-card-action {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--crimson);
+}
+.role-card.receiver .role-card-action { color: var(--sage); }
+.role-card.admin .role-card-action { color: var(--gold-deep); }
+
+/* ══════════════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════════════ */
+.form-page {
+  max-width: 640px; margin: 0 auto;
+  padding: 56px 2rem;
+}
+.form-header { margin-bottom: 36px; }
+.form-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.9rem; color: var(--ink); margin-bottom: 8px;
+}
+.form-header p { color: var(--ink-subtle); font-size: 14px; }
+.form-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--crimson); font-size: 13px; font-weight: 500;
+  cursor: pointer; margin-bottom: 24px;
+  border: none; background: none; font-family: var(--font-body);
+}
+.form-back:hover { text-decoration: underline; }
+
+.form-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: var(--shadow);
+}
+.form-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-subtle);
+  margin: 28px 0 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.form-section-label:first-child { margin-top: 0; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { margin-bottom: 18px; }
+.form-group label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--ink-muted); margin-bottom: 6px;
+}
+.form-group label span { color: var(--crimson); }
+.form-control {
+  width: 100%; padding: 11px 15px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--ink); background: var(--ivory);
+  transition: all .2s; outline: none;
+}
+.form-control:focus {
+  border-color: var(--crimson-light);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(139,26,26,0.08);
+}
+.form-control::placeholder { color: var(--ink-faint); }
+.form-control.error { border-color: var(--danger); background: var(--danger-bg); }
+select.form-control { cursor: pointer; }
+.form-hint { font-size: 12px; color: var(--ink-subtle); margin-top: 4px; }
+.form-error { font-size: 12px; color: var(--danger); margin-top: 4px; display: none; }
+.form-error.visible { display: block; }
+
+/* File input */
+.file-input-wrapper {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 20px; text-align: center;
+  cursor: pointer; transition: all .2s;
+  background: var(--ivory);
+}
+.file-input-wrapper:hover { border-color: var(--crimson-light); background: var(--crimson-pale); }
+.file-input-wrapper.has-file { border-color: var(--sage-mid); background: var(--sage-light); border-style: solid; }
+.file-input-wrapper input { display: none; }
+.file-input-icon { font-size: 1.5rem; margin-bottom: 6px; }
+.file-input-label { font-size: 13px; color: var(--ink-subtle); }
+.file-input-name { font-size: 12px; color: var(--sage); font-weight: 600; margin-top: 4px; }
+
+/* Tabs for login/register */
+.tab-bar {
+  display: flex; gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1; padding: 11px;
+  background: var(--ivory); border: none;
+  font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  color: var(--ink-subtle); cursor: pointer; transition: all .2s;
+}
+.tab-btn.active { background: var(--crimson-deep); color: #fff; font-weight: 600; }
+
+/* Step indicators */
+.step-indicator {
+  display: flex; align-items: center; gap: 0; margin-bottom: 32px;
+}
+.step {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.step:last-child { flex: none; }
+.step-circle {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  background: var(--border); color: var(--ink-subtle);
+  flex-shrink: 0; transition: all .3s;
+}
+.step.active .step-circle { background: var(--crimson); color: #fff; }
+.step.done .step-circle { background: var(--sage-mid); color: #fff; }
+.step-label { font-size: 12px; color: var(--ink-subtle); font-weight: 500; }
+.step.active .step-label { color: var(--crimson); font-weight: 600; }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+.step-line.done { background: var(--sage-mid); }
+
+/* Submit button */
+.btn-submit {
+  width: 100%; padding: 14px;
+  background: var(--crimson); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all .25s; margin-top: 8px;
+  position: relative; overflow: hidden;
+}
+.btn-submit:hover { background: var(--crimson-mid); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-submit:disabled { background: var(--ink-faint); cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-submit.loading::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.15);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.btn-sage {
+  width: 100%; padding: 14px;
+  background: var(--sage); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all .25s; margin-top: 8px;
+}
+.btn-sage:hover { background: var(--sage-mid); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+/* ══════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+══════════════════════════════════════════════════ */
+.toast-container {
+  position: fixed; top: 80px; right: 20px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+}
+.toast {
+  min-width: 300px; max-width: 400px;
+  padding: 14px 18px; border-radius: var(--radius);
+  box-shadow: var(--shadow-md); font-size: 14px;
+  display: flex; align-items: flex-start; gap: 10px;
+  animation: toastIn .3s cubic-bezier(.22,.68,0,1.2);
+  border-left: 4px solid transparent;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.toast.success { background: var(--warm-white); border-left-color: var(--sage-mid); color: var(--ink); }
+.toast.error { background: var(--danger-bg); border-left-color: var(--danger); color: var(--danger); }
+.toast.info { background: var(--gold-pale); border-left-color: var(--gold); color: var(--ink-muted); }
+.toast-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.toast-msg { flex: 1; line-height: 1.5; }
+
+/* ══════════════════════════════════════════════════
+   DASHBOARD — DONOR
+══════════════════════════════════════════════════ */
+.dashboard {
+  max-width: 1100px; margin: 0 auto; padding: 40px 2rem;
+}
+.dashboard-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+}
+.dashboard-greeting h2 {
+  font-family: var(--font-display); font-size: 1.8rem; color: var(--ink);
+}
+.dashboard-greeting p { color: var(--ink-subtle); font-size: 14px; margin-top: 4px; }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 50px; font-size: 12px; font-weight: 600;
+}
+.status-badge.pending { background: var(--gold-pale); color: var(--gold-deep); border: 1px solid rgba(201,168,76,0.3); }
+.status-badge.approved { background: var(--sage-light); color: var(--sage); border: 1px solid rgba(61,122,82,0.25); }
+.status-badge.rejected { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(185,28,28,0.2); }
+.status-badge::before { content: '●'; font-size: 8px; }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px; align-items: start;
+}
+.profile-card {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-xs);
+}
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--crimson), var(--rose));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.8rem; color: #fff;
+  margin-bottom: 16px;
+}
+.profile-name { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
+.profile-email { color: var(--ink-subtle); font-size: 13px; margin-top: 2px; margin-bottom: 16px; }
+.profile-info-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--ink-muted); padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.profile-info-row:last-child { border-bottom: none; }
+.profile-info-label { color: var(--ink-subtle); font-size: 12px; min-width: 80px; }
+
+.main-panel { display: flex; flex-direction: column; gap: 20px; }
+.panel-card {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-xs);
+}
+.panel-card-title {
+  font-family: var(--font-display); font-size: 1.1rem;
+  margin-bottom: 18px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+.organ-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 50px; font-size: 13px;
+  background: var(--crimson-pale); color: var(--crimson);
+  border: 1px solid rgba(139,26,26,0.15); font-weight: 500;
+  margin: 4px;
+}
+.organ-tag.available { background: var(--sage-light); color: var(--sage); border-color: rgba(61,122,82,0.2); }
+
+/* ══════════════════════════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════════════════════════ */
+.admin-layout {
+  display: grid; grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 64px);
+}
+.admin-sidebar {
+  background: var(--crimson-deep); padding: 28px 0;
+  position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+}
+.sidebar-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(240,208,128,0.5);
+  padding: 0 20px; margin-bottom: 6px; margin-top: 20px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; color: rgba(255,255,255,0.7);
+  cursor: pointer; transition: all .2s; font-size: 14px;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.sidebar-item.active { background: rgba(201,168,76,0.15); color: var(--gold-light); font-weight: 500; }
+.sidebar-icon { width: 20px; text-align: center; }
+
+.admin-content { padding: 36px; background: var(--ivory); }
+.admin-page-title {
+  font-family: var(--font-display); font-size: 1.7rem; margin-bottom: 6px;
+}
+.admin-page-sub { color: var(--ink-subtle); font-size: 14px; margin-bottom: 28px; }
+
+/* Metrics */
+.metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.metric-card {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px;
+}
+.metric-value {
+  font-family: var(--font-display); font-size: 2rem; color: var(--crimson); font-weight: 700;
+}
+.metric-label { font-size: 12px; color: var(--ink-subtle); font-weight: 500; margin-top: 4px; }
+.metric-card.green .metric-value { color: var(--sage); }
+.metric-card.gold .metric-value { color: var(--gold-deep); }
+
+/* Table */
+.table-wrap {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); overflow: hidden;
+}
+.table-header {
+  padding: 18px 24px; display: flex; align-items: center;
+  justify-content: space-between; border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap; gap: 12px;
+}
+.table-title { font-weight: 600; font-size: 15px; }
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-pill {
+  padding: 5px 14px; border-radius: 50px;
+  border: 1px solid var(--border); background: var(--ivory);
+  font-size: 12px; cursor: pointer; transition: all .2s; font-family: var(--font-body);
+  color: var(--ink-muted);
+}
+.filter-pill:hover { border-color: var(--crimson-light); color: var(--crimson); }
+.filter-pill.active { background: var(--crimson); color: #fff; border-color: var(--crimson); }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 16px; text-align: left; font-size: 11px;
+  font-weight: 700; color: var(--ink-subtle); letter-spacing: 0.06em;
+  text-transform: uppercase; border-bottom: 1px solid var(--border-subtle);
+  background: var(--ivory);
+}
+td {
+  padding: 14px 16px; font-size: 14px; color: var(--ink);
+  border-bottom: 1px solid var(--border-subtle);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(251,247,241,0.7); }
+
+.action-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; font-family: var(--font-body); transition: all .2s;
+}
+.action-btn.approve { background: var(--sage-light); color: var(--sage); }
+.action-btn.approve:hover { background: var(--sage-mid); color: #fff; }
+.action-btn.reject { background: var(--danger-bg); color: var(--danger); }
+.action-btn.reject:hover { background: var(--danger); color: #fff; }
+.action-btn.view { background: var(--gold-pale); color: var(--gold-deep); }
+.action-btn.view:hover { background: var(--gold); color: var(--crimson-deep); }
+
+/* Pagination */
+.pagination {
+  padding: 16px 24px; display: flex; align-items: center;
+  justify-content: space-between; border-top: 1px solid var(--border-subtle);
+}
+.pagination-info { font-size: 13px; color: var(--ink-subtle); }
+.page-btns { display: flex; gap: 6px; }
+.page-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--ivory);
+  font-size: 13px; cursor: pointer; transition: all .2s; font-family: var(--font-body);
+}
+.page-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+.page-btn.active { background: var(--crimson); color: #fff; border-color: var(--crimson); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,16,8,0.55); backdrop-filter: blur(4px);
+  z-index: 500; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--warm-white); border-radius: var(--radius-xl);
+  max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg); animation: modalIn .3s cubic-bezier(.22,.68,0,1.2);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(.94) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: var(--font-display); font-size: 1.2rem; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--ivory); border: 1px solid var(--border);
+  cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--crimson-pale); border-color: var(--crimson-light); }
+.modal-body { padding: 24px 28px; }
+.modal-footer { padding: 16px 28px 24px; display: flex; gap: 12px; justify-content: flex-end; }
+.donor-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.detail-item label { font-size: 11px; color: var(--ink-subtle); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+.detail-item span { font-size: 14px; color: var(--ink); font-weight: 500; }
+.doc-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.doc-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--gold-pale); color: var(--gold-deep);
+  text-decoration: none; font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(201,168,76,0.25); transition: all .2s;
+}
+.doc-link:hover { background: var(--gold); color: var(--crimson-deep); }
+
+/* ══════════════════════════════════════════════════
+   SEARCH RESULTS (Receiver)
+══════════════════════════════════════════════════ */
+.search-results { margin-top: 28px; }
+.result-card {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px; margin-bottom: 14px;
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 16px; align-items: start; transition: all .2s;
+}
+.result-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-subtle); }
+.result-organ-badge {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: var(--crimson-pale); display: flex; align-items: center;
+  justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+}
+.result-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.result-meta { font-size: 13px; color: var(--ink-subtle); display: flex; flex-wrap: wrap; gap: 8px; }
+.result-meta span::before { content: '• '; color: var(--ink-faint); }
+.result-meta span:first-child::before { content: ''; }
+.result-contact {
+  text-align: right; font-size: 13px;
+  color: var(--ink-muted);
+}
+.result-contact strong { display: block; font-size: 14px; color: var(--ink); }
+
+/* ══════════════════════════════════════════════════
+   LOADING SPINNER
+══════════════════════════════════════════════════ */
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--crimson);
+  border-radius: 50%; animation: spin .7s linear infinite;
+  margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--ink-subtle);
+}
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 16px; }
+.empty-state p { font-size: 15px; }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { position: static; height: auto; }
+  .form-row { grid-template-columns: 1fr; }
+  .stats-strip { flex-wrap: wrap; }
+  .stat-item { padding: 12px 24px; border-right: none; }
+  .donor-detail-grid { grid-template-columns: 1fr; }
+  .result-card { grid-template-columns: 1fr; }
+  .nav-pills { gap: 4px; }
+  .nav-pill { padding: 6px 12px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOAST CONTAINER ══════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══ MODAL: Donor Detail (Admin) ══════════════════ -->
+<div class="modal-overlay" id="donorDetailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Donor Full Detail</div>
+      <button class="modal-close" onclick="closeModal('donorDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="donorDetailBody">
+      <div class="spinner"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn reject" id="modalRejectBtn" style="padding:10px 24px;font-size:13px">Reject</button>
+      <button class="action-btn approve" id="modalApproveBtn" style="padding:10px 24px;font-size:13px">Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Reject Reason ═════════════════════════ -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Rejection Reason</div>
+      <button class="modal-close" onclick="closeModal('rejectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Please provide a detailed reason <span>*</span></label>
+        <textarea id="rejectReasonInput" class="form-control" rows="4" placeholder="e.g. Medical report is outdated (older than 6 months)." style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn view" onclick="closeModal('rejectModal')">Cancel</button>
+      <button class="action-btn reject" onclick="submitReject()" style="padding:10px 24px">Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOP NAV ═══════════════════════════════════════ -->
+<nav class="top-nav">
+  <div class="nav-brand" onclick="navigate('landing')">
+    <div class="nav-brand-icon">🫀</div>
+    OrgoLife
+    <span>/ India</span>
+  </div>
+  <div class="nav-pills" id="navPills">
+    <button class="nav-pill" onclick="navigate('donor-auth')">Donor</button>
+    <button class="nav-pill" onclick="navigate('receiver-auth')">Receiver</button>
+    <button class="nav-pill" onclick="navigate('admin-auth')">Hospital</button>
+  </div>
+  <div id="nav-user-info">
+    <span>👤 <span id="nav-user-name"></span></span>
+    <button class="nav-logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: LANDING
+════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-landing">
+  <div class="hero">
+    <div class="hero-ornament o1"></div>
+    <div class="hero-ornament o2"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">💉 India's Organ Donation Network</div>
+      <h1>Give life.<br><em>Find hope.</em></h1>
+      <p>OrgoLife connects organ donors with receivers through verified hospital networks — making the donation process transparent, safe, and dignified.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="navigate('donor-auth')">Register as Donor</button>
+        <button class="btn-outline" onclick="navigate('receiver-auth')">I Need an Organ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-item"><div class="stat-num" id="stat-donors">—</div><div class="stat-label">Registered Donors</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-verified">—</div><div class="stat-label">Verified Donations</div></div>
+    <div class="stat-item"><div class="stat-num">9</div><div class="stat-label">Organs Covered</div></div>
+    <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Platform Availability</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Who uses OrgoLife?</div>
+    <div class="section-sub">Three portals, one mission — saving lives through transparent organ donation.</div>
+    <div class="role-cards">
+      <div class="role-card donor" onclick="navigate('donor-auth')">
+        <div class="role-icon">🫀</div>
+        <h3>Organ Donors</h3>
+        <p>Register your willingness to donate. Upload your documents, choose preferred hospitals, and get verified by medical professionals.</p>
+        <div class="role-card-action">Start Donating →</div>
+      </div>
+      <div class="role-card receiver" onclick="navigate('receiver-auth')">
+        <div class="role-icon">🔍</div>
+        <h3>Organ Receivers</h3>
+        <p>Search for verified donors by organ type, blood group, and location. Access complete contact information for coordination.</p>
+        <div class="role-card-action">Find a Donor →</div>
+      </div>
+      <div class="role-card admin" onclick="navigate('admin-auth')">
+        <div class="role-icon">🏥</div>
+        <h3>Hospital Admins</h3>
+        <p>Verify donor documents, approve or reject applications, and maintain the integrity of your hospital's donor network.</p>
+        <div class="role-card-action">Admin Portal →</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: DONOR AUTH
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-donor-auth">
+  <div class="form-page">
+    <button class="form-back" onclick="navigate('landing')">← Back to Home</button>
+    <div class="form-header">
+      <h2>Donor Portal</h2>
+      <p>Login to your account or register as a new organ donor.</p>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="donorLoginTab" onclick="switchTab('donor','login')">Sign In</button>
+      <button class="tab-btn" id="donorRegTab" onclick="switchTab('donor','register')">Register</button>
+    </div>
+
+    <!-- DONOR LOGIN -->
+    <div id="donorLoginForm" class="form-card">
+      <div class="form-group">
+        <label>Email Address <span>*</span></label>
+        <input type="email" class="form-control" id="dLoginEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password <span>*</span></label>
+        <input type="password" class="form-control" id="dLoginPass" placeholder="••••••••">
+      </div>
+      <button class="btn-submit" onclick="donorLogin()">Sign In as Donor</button>
+    </div>
+
+    <!-- DONOR REGISTER (STEP 1) -->
+    <div id="donorRegForm" class="form-card" style="display:none">
+      <div class="step-indicator">
+        <div class="step active" id="dStep1"><div class="step-circle">1</div><div class="step-label">Profile</div></div>
+        <div class="step-line" id="dLine1"></div>
+        <div class="step active" id="dStep2"><div class="step-circle">2</div><div class="step-label">Documents</div></div>
+        <div class="step-line" id="dLine2"></div>
+        <div class="step" id="dStep3"><div class="step-circle">3</div><div class="step-label">Organ</div></div>
+      </div>
+      <div id="dStep1Form">
+        <div class="form-section-label">Personal Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name <span>*</span></label><input class="form-control" id="dName" placeholder="Rajesh Kumar"></div>
+          <div class="form-group"><label>Age <span>*</span></label><input type="number" class="form-control" id="dAge" placeholder="35" min="18" max="70"></div>
+        </div>
+        <div class="form-group"><label>Father's Name <span>*</span></label><input class="form-control" id="dFather" placeholder="Ramesh Kumar"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Email <span>*</span></label><input type="email" class="form-control" id="dEmail" placeholder="rajesh@email.com"></div>
+          <div class="form-group"><label>Phone <span>*</span></label><input class="form-control" id="dPhone" type="tel" placeholder="9876543210" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" title="Enter exactly 10-digit mobile number"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Password <span>*</span></label><input type="password" class="form-control" id="dPass" placeholder="Min 8 chars, A-Z, 0-9, !@#"></div>
+          <div class="form-group"><label>Confirm Password <span>*</span></label><input type="password" class="form-control" id="dPassConfirm" placeholder="Repeat password"></div>
+        </div>
+        <div class="form-section-label">Address</div>
+        <div class="form-row">
+          <div class="form-group"><label>State <span>*</span></label><input class="form-control" id="dState" placeholder="Maharashtra"></div>
+          <div class="form-group"><label>City <span>*</span></label><input class="form-control" id="dCity" placeholder="Mumbai"></div>
+        </div>
+        <div class="form-group"><label>Full Address <span>*</span></label><input class="form-control" id="dAddress" placeholder="123 MG Road, Andheri West"></div>
+        <div class="form-section-label">Identity (Optional)</div>
+        <div class="form-row">
+          <div class="form-group"><label>Aadhaar Number</label><input class="form-control" id="dAadhaar" placeholder="12-digit number"></div>
+          <div class="form-group"><label>PAN Number</label><input class="form-control" id="dPan" placeholder="ABCDE1234F"></div>
+        </div>
+        <div class="form-section-label">Document Uploads</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Aadhaar Card <span>*</span></label>
+            <div class="file-input-wrapper" id="aadhaarWrap" onclick="document.getElementById('dAadhaarFile').click()">
+              <input type="file" id="dAadhaarFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('dAadhaarFile','aadhaarWrap')">
+              <div class="file-input-icon">📄</div>
+              <div class="file-input-label">PDF, JPG, PNG (max 5 MB)</div>
+              <div class="file-input-name" id="dAadhaarFileName"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>PAN Card <span>*</span></label>
+            <div class="file-input-wrapper" id="panWrap" onclick="document.getElementById('dPanFile').click()">
+              <input type="file" id="dPanFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('dPanFile','panWrap')">
+              <div class="file-input-icon">📄</div>
+              <div class="file-input-label">PDF, JPG, PNG (max 5 MB)</div>
+              <div class="file-input-name" id="dPanFileName"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Medical Report <span>*</span></label>
+          <div class="file-input-wrapper" id="medWrap" onclick="document.getElementById('dMedFile').click()">
+            <input type="file" id="dMedFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('dMedFile','medWrap')">
+            <div class="file-input-icon">🩺</div>
+            <div class="file-input-label">Recent medical fitness report — PDF, JPG, PNG (max 5 MB)</div>
+            <div class="file-input-name" id="dMedFileName"></div>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="donorRegisterStep1()">Continue to Organ Registration →</button>
+      </div>
+
+      <!-- STEP 2: Organ -->
+      <div id="dStep2Form" style="display:none">
+        <div class="form-section-label">Organ Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Organ to Donate <span>*</span></label>
+            <select class="form-control" id="dOrgan">
+              <option value="">Select Organ</option>
+              <option value="kidney">Kidney</option>
+              <option value="liver">Liver</option>
+              <option value="heart">Heart</option>
+              <option value="lung">Lung</option>
+              <option value="pancreas">Pancreas</option>
+              <option value="cornea">Cornea</option>
+              <option value="skin">Skin</option>
+              <option value="bone_marrow">Bone Marrow</option>
+              <option value="intestine">Intestine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Blood Group <span>*</span></label>
+            <select class="form-control" id="dBlood">
+              <option value="">Select Blood Group</option>
+              <option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option>
+              <option>O+</option><option>O-</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Health Report / Notes <span>*</span></label>
+          <textarea class="form-control" id="dHealthReport" rows="4" placeholder="Describe your current health status, any conditions, medications..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>State <span>*</span></label><input class="form-control" id="dOrganState" placeholder="Maharashtra"></div>
+          <div class="form-group"><label>City <span>*</span></label><input class="form-control" id="dOrganCity" placeholder="Mumbai"></div>
+        </div>
+        <div class="form-group">
+          <label>Preferred Hospitals (comma separated) <span>*</span></label>
+          <input class="form-control" id="dHospitals" placeholder="Apollo Mumbai, Lilavati Hospital, KEM Hospital">
+          <div class="form-hint">Enter up to 5 hospital names separated by commas.</div>
+        </div>
+        <button class="btn-submit" onclick="donorRegisterStep2()">Complete Registration</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: RECEIVER AUTH
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-receiver-auth">
+  <div class="form-page">
+    <button class="form-back" onclick="navigate('landing')">← Back to Home</button>
+    <div class="form-header">
+      <h2>Receiver Portal</h2>
+      <p>Find verified organ donors matched to your medical needs.</p>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="recLoginTab" onclick="switchTab('receiver','login')">Sign In</button>
+      <button class="tab-btn" id="recRegTab" onclick="switchTab('receiver','register')">Register</button>
+    </div>
+
+    <!-- RECEIVER LOGIN -->
+    <div id="recLoginForm" class="form-card">
+      <div class="form-group">
+        <label>Email Address <span>*</span></label>
+        <input type="email" class="form-control" id="rLoginEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password <span>*</span></label>
+        <input type="password" class="form-control" id="rLoginPass" placeholder="••••••••">
+      </div>
+      <button class="btn-sage" onclick="receiverLogin()">Sign In as Receiver</button>
+    </div>
+
+    <!-- RECEIVER REGISTER -->
+    <div id="recRegForm" class="form-card" style="display:none">
+      <div class="form-section-label">Personal Information</div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name <span>*</span></label><input class="form-control" id="rName" placeholder="Priya Sharma"></div>
+        <div class="form-group"><label>Age <span>*</span></label><input type="number" class="form-control" id="rAge" placeholder="28"></div>
+      </div>
+      <div class="form-group"><label>Father's Name <span>*</span></label><input class="form-control" id="rFather" placeholder="Suresh Sharma"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Email <span>*</span></label><input type="email" class="form-control" id="rEmail" placeholder="priya@email.com"></div>
+        <div class="form-group"><label>Phone <span>*</span></label><input class="form-control" id="rPhone" type="tel" placeholder="9876543211" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" title="Enter exactly 10-digit mobile number"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Password <span>*</span></label><input type="password" class="form-control" id="rPass" placeholder="Min 8 chars, A-Z, 0-9"></div>
+        <div class="form-group"><label>Confirm Password <span>*</span></label><input type="password" class="form-control" id="rPassConfirm" placeholder="Repeat password"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>State <span>*</span></label><input class="form-control" id="rState" placeholder="Maharashtra"></div>
+        <div class="form-group"><label>City <span>*</span></label><input class="form-control" id="rCity" placeholder="Pune"></div>
+      </div>
+      <div class="form-section-label">Identity (Optional)</div>
+      <div class="form-row">
+        <div class="form-group"><label>Aadhaar Number</label><input class="form-control" id="rAadhaar" placeholder="12-digit number"></div>
+        <div class="form-group"><label>PAN Number</label><input class="form-control" id="rPan" placeholder="ABCDE1234F"></div>
+      </div>
+      <div class="form-section-label">Document Uploads</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Aadhaar Card <span>*</span></label>
+          <div class="file-input-wrapper" id="rAadhaarWrap" onclick="document.getElementById('rAadhaarFile').click()">
+            <input type="file" id="rAadhaarFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('rAadhaarFile','rAadhaarWrap')">
+            <div class="file-input-icon">📄</div>
+            <div class="file-input-label">PDF, JPG, PNG</div>
+            <div class="file-input-name" id="rAadhaarFileName"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>PAN Card <span>*</span></label>
+          <div class="file-input-wrapper" id="rPanWrap" onclick="document.getElementById('rPanFile').click()">
+            <input type="file" id="rPanFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('rPanFile','rPanWrap')">
+            <div class="file-input-icon">📄</div>
+            <div class="file-input-label">PDF, JPG, PNG</div>
+            <div class="file-input-name" id="rPanFileName"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Medical Report <span>*</span></label>
+        <div class="file-input-wrapper" id="rMedWrap" onclick="document.getElementById('rMedFile').click()">
+          <input type="file" id="rMedFile" accept=".pdf,.jpg,.jpeg,.png" onchange="fileChosen('rMedFile','rMedWrap')">
+          <div class="file-input-icon">🩺</div>
+          <div class="file-input-label">Recent medical report showing urgency</div>
+          <div class="file-input-name" id="rMedFileName"></div>
+        </div>
+      </div>
+      <button class="btn-sage" onclick="receiverRegister()">Register as Receiver</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: ADMIN AUTH
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-admin-auth">
+  <div class="form-page">
+    <button class="form-back" onclick="navigate('landing')">← Back to Home</button>
+    <div class="form-header">
+      <h2>Hospital Admin Portal</h2>
+      <p>Manage donor verification for your hospital network.</p>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="adminLoginTab" onclick="switchTab('admin','login')">Sign In</button>
+      <button class="tab-btn" id="adminRegTab" onclick="switchTab('admin','register')">Register Hospital</button>
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div id="adminLoginForm" class="form-card">
+      <div class="form-group">
+        <label>Admin Email <span>*</span></label>
+        <input type="email" class="form-control" id="aLoginEmail" placeholder="admin@hospital.com">
+      </div>
+      <div class="form-group">
+        <label>Password <span>*</span></label>
+        <input type="password" class="form-control" id="aLoginPass" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label>Hospital Registration Code <span>*</span></label>
+        <input class="form-control" id="aLoginCode" placeholder="MH-HOSP-2024-001">
+        <div class="form-hint">The unique code assigned when your hospital was registered on OrgoLife.</div>
+      </div>
+      <button class="btn-submit" onclick="adminLogin()" style="background:var(--gold-deep); color:#fff">Sign In as Admin</button>
+    </div>
+
+    <!-- ADMIN REGISTER -->
+    <div id="adminRegForm" class="form-card" style="display:none">
+      <div class="form-section-label">Admin Account</div>
+      <div class="form-row">
+        <div class="form-group"><label>Admin Name <span>*</span></label><input class="form-control" id="aName" placeholder="Dr. Ananya Singh"></div>
+        <div class="form-group"><label>Phone <span>*</span></label><input class="form-control" id="aPhone" type="tel" placeholder="9876500000" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" title="Enter exactly 10-digit mobile number"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email <span>*</span></label><input type="email" class="form-control" id="aEmail" placeholder="admin@hospital.com"></div>
+        <div class="form-group"><label>Password <span>*</span></label><input type="password" class="form-control" id="aPass" placeholder="AdminPass123!"></div>
+      </div>
+      <div class="form-section-label">Hospital Details</div>
+      <div class="form-group"><label>Hospital Name <span>*</span></label><input class="form-control" id="aHospName" placeholder="Apollo Hospital Mumbai"></div>
+      <div class="form-group"><label>Registration Number <span>*</span></label><input class="form-control" id="aHospReg" placeholder="MH-HOSP-2024-001"></div>
+      <div class="form-row">
+        <div class="form-group"><label>State <span>*</span></label><input class="form-control" id="aHospState" placeholder="Maharashtra"></div>
+        <div class="form-group"><label>City <span>*</span></label><input class="form-control" id="aHospCity" placeholder="Mumbai"></div>
+      </div>
+      <div class="form-group"><label>Hospital Address <span>*</span></label><input class="form-control" id="aHospAddr" placeholder="Plot 13, Off New Link Road, Andheri West"></div>
+      <div class="form-group"><label>Hospital Contact <span>*</span></label><input class="form-control" id="aHospContact" type="tel" placeholder="02266920000" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" title="Enter exactly 10-digit contact number"></div>
+      <button class="btn-submit" onclick="adminRegister()" style="background:var(--gold-deep)">Register Hospital</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: DONOR DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-donor-dashboard">
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">
+        <h2>Welcome back, <span id="ddName">Donor</span> 👋</h2>
+        <p>Your donation profile and organ registrations at a glance.</p>
+      </div>
+      <div id="ddStatus" class="status-badge pending">Pending Verification</div>
+    </div>
+    <div class="dashboard-grid">
+      <div>
+        <div class="profile-card">
+          <div class="profile-avatar" id="ddAvatar">R</div>
+          <div class="profile-name" id="ddProfileName">Loading...</div>
+          <div class="profile-email" id="ddEmail">—</div>
+          <div class="profile-info-row"><span class="profile-info-label">Age</span><span id="ddAge">—</span></div>
+          <div class="profile-info-row"><span class="profile-info-label">Location</span><span id="ddLocation">—</span></div>
+          <div class="profile-info-row"><span class="profile-info-label">Phone</span><span id="ddPhone">—</span></div>
+          <div class="profile-info-row"><span class="profile-info-label">Verified by</span><span id="ddVerifiedBy">—</span></div>
+        </div>
+      </div>
+      <div class="main-panel">
+        <div class="panel-card">
+          <div class="panel-card-title">
+            Registered Organs
+            <button class="action-btn view" onclick="showOrganForm()">+ Add Organ</button>
+          </div>
+          <div id="ddOrgans"><div class="spinner"></div></div>
+        </div>
+        <div class="panel-card" id="organFormPanel" style="display:none">
+          <div class="panel-card-title">Register New Organ</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Organ <span>*</span></label>
+              <select class="form-control" id="ddNewOrgan">
+                <option value="">Select</option>
+                <option value="kidney">Kidney</option><option value="liver">Liver</option>
+                <option value="heart">Heart</option><option value="lung">Lung</option>
+                <option value="pancreas">Pancreas</option><option value="cornea">Cornea</option>
+                <option value="skin">Skin</option><option value="bone_marrow">Bone Marrow</option>
+                <option value="intestine">Intestine</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Blood Group <span>*</span></label>
+              <select class="form-control" id="ddNewBlood">
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Health Notes <span>*</span></label>
+            <textarea class="form-control" id="ddNewHealth" rows="3" placeholder="Current health status..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>State</label><input class="form-control" id="ddNewState" placeholder="Maharashtra"></div>
+            <div class="form-group"><label>City</label><input class="form-control" id="ddNewCity" placeholder="Mumbai"></div>
+          </div>
+          <div class="form-group">
+            <label>Preferred Hospitals</label>
+            <input class="form-control" id="ddNewHospitals" placeholder="Apollo Mumbai, Lilavati Hospital">
+          </div>
+          <button class="btn-submit" onclick="addOrganFromDashboard()">Register Organ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: RECEIVER DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-receiver-dashboard">
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">
+        <h2>Find a Donor, <span id="rdName">Receiver</span></h2>
+        <p>Search verified organ donors matched to your requirements.</p>
+      </div>
+    </div>
+
+    <!-- Search Panel -->
+    <div class="panel-card" style="margin-bottom:24px">
+      <div class="panel-card-title">🔍 Search Donors</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Organ Needed <span>*</span></label>
+          <select class="form-control" id="sOrgan">
+            <option value="">Select Organ</option>
+            <option value="kidney">Kidney</option><option value="liver">Liver</option>
+            <option value="heart">Heart</option><option value="lung">Lung</option>
+            <option value="pancreas">Pancreas</option><option value="cornea">Cornea</option>
+            <option value="skin">Skin</option><option value="bone_marrow">Bone Marrow</option>
+            <option value="intestine">Intestine</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Blood Group <span>*</span></label>
+          <select class="form-control" id="sBlood">
+            <option value="">Select Blood Group</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>State</label><input class="form-control" id="sState" placeholder="Maharashtra (optional)"></div>
+        <div class="form-group"><label>City</label><input class="form-control" id="sCity" placeholder="Mumbai (optional)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Verified Only</label>
+          <select class="form-control" id="sVerified">
+            <option value="all">All Donors</option>
+            <option value="yes">Verified Only ✓</option>
+            <option value="no">Unverified</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Hospital Name</label><input class="form-control" id="sHospital" placeholder="Apollo Mumbai (optional)"></div>
+      </div>
+      <button class="btn-sage" onclick="searchDonors()">Search Donors</button>
+    </div>
+
+    <!-- Results -->
+    <div id="searchResults" class="search-results"></div>
+    <div id="searchPagination" style="display:none; text-align:center; margin-top:16px">
+      <button class="page-btn" id="sPrevBtn" onclick="searchDonors('prev')">←</button>
+      <span id="sPageInfo" style="margin:0 12px;font-size:13px;color:var(--ink-subtle)"></span>
+      <button class="page-btn" id="sNextBtn" onclick="searchDonors('next')">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: ADMIN DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-admin-dashboard">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div style="padding:0 20px 24px; border-bottom:1px solid rgba(255,255,255,0.08)">
+        <div style="font-family:var(--font-display);color:var(--gold-light);font-size:1.1rem;margin-bottom:4px" id="adminHospName">Hospital</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.45)" id="adminHospCity">—</div>
+      </div>
+      <div class="sidebar-section-label">Overview</div>
+      <div class="sidebar-item active" onclick="adminSection('overview',this)"><span class="sidebar-icon">📊</span> Dashboard</div>
+      <div class="sidebar-section-label">Donors</div>
+      <div class="sidebar-item" onclick="adminSection('donors-all',this)"><span class="sidebar-icon">👥</span> All Donors</div>
+      <div class="sidebar-item" onclick="adminSection('donors-pending',this)"><span class="sidebar-icon">⏳</span> Pending Review</div>
+      <div class="sidebar-item" onclick="adminSection('donors-approved',this)"><span class="sidebar-icon">✅</span> Approved</div>
+      <div class="sidebar-item" onclick="adminSection('donors-rejected',this)"><span class="sidebar-icon">❌</span> Rejected</div>
+    </aside>
+    <main class="admin-content">
+      <!-- Overview Section -->
+      <div id="adminSec-overview">
+        <div class="admin-page-title">Hospital Overview</div>
+        <div class="admin-page-sub">Donor verification stats for your hospital.</div>
+        <div class="metrics-row">
+          <div class="metric-card"><div class="metric-value" id="mTotal">—</div><div class="metric-label">Total Donors</div></div>
+          <div class="metric-card green"><div class="metric-value" id="mApproved">—</div><div class="metric-label">Approved</div></div>
+          <div class="metric-card"><div class="metric-value" id="mPending">—</div><div class="metric-label">Pending</div></div>
+          <div class="metric-card" style="--c:var(--danger)"><div class="metric-value" id="mRejected" style="color:var(--danger)">—</div><div class="metric-label">Rejected</div></div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-title">Recent Pending Donors</div>
+          <div id="adminRecentList"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <!-- Donors Table Section -->
+      <div id="adminSec-donors" style="display:none">
+        <div class="admin-page-title" id="adminDonorSectionTitle">All Donors</div>
+        <div class="admin-page-sub">Review documents and manage verification status.</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <div class="table-title" id="adminTableTitle">Donor List</div>
+            <div class="filter-pills">
+              <span class="filter-pill active" onclick="filterDonors('all',this)">All</span>
+              <span class="filter-pill" onclick="filterDonors('pending',this)">Pending</span>
+              <span class="filter-pill" onclick="filterDonors('approved',this)">Approved</span>
+              <span class="filter-pill" onclick="filterDonors('rejected',this)">Rejected</span>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Donor Name</th>
+                  <th>Age</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Registered</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="donorTableBody">
+                <tr><td colspan="6"><div class="spinner"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info" id="adminPaginationInfo">Loading...</div>
+            <div class="page-btns">
+              <button class="page-btn" id="adminPrevBtn" onclick="adminPaginate(-1)" disabled>←</button>
+              <button class="page-btn active" id="adminCurPage">1</button>
+              <button class="page-btn" id="adminNextBtn" onclick="adminPaginate(1)">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   PHONE INPUT — allow digits only, max 10 chars
+════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  const phoneIds = ['dPhone', 'rPhone', 'aPhone', 'aHospContact'];
+  phoneIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g, '').slice(0, 10);
+    });
+    el.addEventListener('keydown', e => {
+      const allowed = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+      if (!allowed.includes(e.key) && !/^[0-9]$/.test(e.key)) e.preventDefault();
+    });
+    el.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      const digits = pasted.replace(/\D/g, '').slice(0, 10);
+      el.value = digits;
+    });
+  });
+});
+
+/* ════════════════════════════════════════════════════════
+   APP STATE
+════════════════════════════════════════════════════════ */
+// API base — relative URL so it works on any host (localhost, deployed server, etc.)
+const API = window.location.origin + '/api/v1';
+let state = {
+  currentPage: 'landing',
+  token: localStorage.getItem('ol_token') || null,
+  role: localStorage.getItem('ol_role') || null,
+  userName: localStorage.getItem('ol_name') || null,
+  donorRegStep: 1,
+  pendingDonorId: null,        // after step1, hold for step2
+  searchPage: 1, searchTotal: 0, searchPageSize: 10,
+  adminPage: 1, adminFilter: 'all', adminCurrentDonorId: null,
+};
+
+/* ════════════════════════════════════════════════════════
+   API HELPERS
+════════════════════════════════════════════════════════ */
+async function apiCall(endpoint, method = 'GET', body = null, isFormData = false) {
+  const headers = {};
+  if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  if (body && !isFormData) headers['Content-Type'] = 'application/json';
+
+  const opts = { method, headers };
+  if (body) opts.body = isFormData ? body : JSON.stringify(body);
+
+  try {
+    const res = await fetch(API + endpoint, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.detail || 'Request failed');
+    return data;
+  } catch (e) {
+    throw e;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+/* ════════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════════ */
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) { el.classList.add('active'); state.currentPage = page; window.scrollTo(0,0); }
+  updateNav();
+  if (page === 'donor-dashboard') loadDonorDashboard();
+  if (page === 'receiver-dashboard') loadReceiverProfile();
+  if (page === 'admin-dashboard') loadAdminOverview();
+}
+
+function updateNav() {
+  const loggedIn = !!state.token;
+  document.getElementById('navPills').style.display = loggedIn ? 'none' : 'flex';
+  const uInfo = document.getElementById('nav-user-info');
+  uInfo.classList.toggle('visible', loggedIn);
+  if (loggedIn) document.getElementById('nav-user-name').textContent = state.userName || 'User';
+}
+
+function logout() {
+  localStorage.removeItem('ol_token');
+  localStorage.removeItem('ol_role');
+  localStorage.removeItem('ol_name');
+  state.token = null; state.role = null; state.userName = null;
+  navigate('landing');
+  toast('You have been signed out.', 'info');
+}
+
+/* ════════════════════════════════════════════════════════
+   TAB SWITCHING
+════════════════════════════════════════════════════════ */
+function switchTab(portal, tab) {
+  const prefixes = { donor: 'donor', receiver: 'rec', admin: 'admin' };
+  const p = prefixes[portal];
+  document.getElementById(p+'LoginTab').classList.toggle('active', tab==='login');
+  document.getElementById(p+'RegTab').classList.toggle('active', tab==='register');
+  document.getElementById(p+'LoginForm').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById(p+'RegForm').style.display = tab==='register' ? 'block' : 'none';
+}
+
+/* ════════════════════════════════════════════════════════
+   FILE INPUT UI
+════════════════════════════════════════════════════════ */
+function fileChosen(inputId, wrapId) {
+  const inp = document.getElementById(inputId);
+  const wrap = document.getElementById(wrapId);
+  const nameEl = document.getElementById(inputId.replace('File','') + 'FileName') ||
+                 document.getElementById(inputId + 'Name');
+  if (inp.files && inp.files[0]) {
+    wrap.classList.add('has-file');
+    // find the name element inside wrap
+    const nm = wrap.querySelector('.file-input-name');
+    if (nm) nm.textContent = '✓ ' + inp.files[0].name;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   DONOR LOGIN
+════════════════════════════════════════════════════════ */
+async function donorLogin() {
+  const email = document.getElementById('dLoginEmail').value.trim();
+  const password = document.getElementById('dLoginPass').value;
+  if (!email || !password) { toast('Please fill all fields.', 'error'); return; }
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const data = await apiCall('/auth/login/donor', 'POST', { email, password });
+    saveAuth(data);
+    navigate('donor-dashboard');
+    toast(`Welcome back, ${data.name}!`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In as Donor'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   DONOR REGISTER STEP 1
+════════════════════════════════════════════════════════ */
+async function donorRegisterStep1() {
+  const name = document.getElementById('dName').value.trim();
+  const age = document.getElementById('dAge').value;
+  const father_name = document.getElementById('dFather').value.trim();
+  const email = document.getElementById('dEmail').value.trim();
+  const password = document.getElementById('dPass').value;
+  const confirm = document.getElementById('dPassConfirm').value;
+  const contact = document.getElementById('dPhone').value.trim();
+  const stateVal = document.getElementById('dState').value.trim();
+  const city = document.getElementById('dCity').value.trim();
+  const address = document.getElementById('dAddress').value.trim();
+  const aadhaar = document.getElementById('dAadhaar').value.trim();
+  const pan = document.getElementById('dPan').value.trim().toUpperCase();
+  const aadhaarFile = document.getElementById('dAadhaarFile').files[0];
+  const panFile = document.getElementById('dPanFile').files[0];
+  const medFile = document.getElementById('dMedFile').files[0];
+
+  if (!name||!age||!father_name||!email||!password||!contact||!stateVal||!city||!address) {
+    toast('Please fill all required fields.', 'error'); return;
+  }
+  if (!/^[0-9]{10}$/.test(contact)) { toast('Phone number must be exactly 10 digits.', 'error'); return; }
+  if (password !== confirm) { toast('Passwords do not match.', 'error'); return; }
+  if (!aadhaarFile||!panFile||!medFile) { toast('Please upload all 3 documents.', 'error'); return; }
+
+  const fd = new FormData();
+  fd.append('name', name); fd.append('age', age); fd.append('father_name', father_name);
+  fd.append('email', email); fd.append('password', password); fd.append('contact_number', contact);
+  fd.append('state', stateVal); fd.append('city', city); fd.append('full_address', address);
+  if (aadhaar) fd.append('aadhaar_number', aadhaar);
+  if (pan) fd.append('pan_number', pan);
+  fd.append('aadhaar_file', aadhaarFile);
+  fd.append('pan_file', panFile);
+  fd.append('medical_file', medFile);
+
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Registering...';
+  try {
+    const regData = await apiCall('/donors/register', 'POST', fd, true);
+    state.pendingDonorId = regData.data?.donor_id;
+    // Auto-login the donor
+    const loginData = await apiCall('/auth/login/donor', 'POST', { email, password });
+    saveAuth(loginData);
+    // Move to step 2
+    document.getElementById('dStep1Form').style.display = 'none';
+    document.getElementById('dStep2Form').style.display = 'block';
+    document.getElementById('dStep1').classList.add('done');
+    document.getElementById('dLine1').classList.add('done');
+    document.getElementById('dOrganState').value = stateVal;
+    document.getElementById('dOrganCity').value = city;
+    toast('Profile created! Now register your organ.', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Continue to Organ Registration →'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   DONOR REGISTER STEP 2 (ORGAN)
+════════════════════════════════════════════════════════ */
+async function donorRegisterStep2() {
+  const organ_name = document.getElementById('dOrgan').value;
+  const blood_group = document.getElementById('dBlood').value;
+  const health_report = document.getElementById('dHealthReport').value.trim();
+  const stateVal = document.getElementById('dOrganState').value.trim();
+  const cityVal = document.getElementById('dOrganCity').value.trim();
+  const hospStr = document.getElementById('dHospitals').value.trim();
+  if (!organ_name||!blood_group||!health_report||!hospStr) {
+    toast('Please fill all required organ fields.', 'error'); return;
+  }
+  const hospitals_selected = hospStr.split(',').map(h=>h.trim()).filter(Boolean).slice(0,5);
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Registering organ...';
+  try {
+    await apiCall('/donors/organs', 'POST', {
+      organ_name, blood_group, health_report, hospitals_selected, state: stateVal, city: cityVal
+    });
+    navigate('donor-dashboard');
+    toast('Organ registered successfully! Awaiting hospital verification.', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Complete Registration'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   DONOR DASHBOARD
+════════════════════════════════════════════════════════ */
+async function loadDonorDashboard() {
+  try {
+    const data = await apiCall('/donors/profile');
+    const p = data.data;
+    document.getElementById('ddName').textContent = p.name.split(' ')[0];
+    document.getElementById('ddProfileName').textContent = p.name;
+    document.getElementById('ddEmail').textContent = p.email;
+    document.getElementById('ddAge').textContent = p.age + ' years';
+    document.getElementById('ddLocation').textContent = `${p.city}, ${p.state}`;
+    document.getElementById('ddPhone').textContent = p.contact_number;
+    document.getElementById('ddVerifiedBy').textContent = p.verified_by_hospital || 'Not yet verified';
+    document.getElementById('ddAvatar').textContent = p.name[0].toUpperCase();
+
+    // Status badge
+    const badge = document.getElementById('ddStatus');
+    badge.className = 'status-badge ' + p.status;
+    badge.textContent = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+
+    // Organs
+    const organsEl = document.getElementById('ddOrgans');
+    if (!p.organ_registrations || p.organ_registrations.length === 0) {
+      organsEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🫀</div><p>No organs registered yet.</p></div>';
+    } else {
+      organsEl.innerHTML = p.organ_registrations.map(o => `
+        <span class="organ-tag ${o.is_available ? 'available' : ''}">
+          ${organEmoji(o.organ_name)} ${o.organ_name.replace('_',' ')}
+          ${o.is_available ? '· Available' : '· Donated'}
+        </span>`).join('');
+    }
+  } catch(e) { toast('Could not load profile: ' + e.message, 'error'); }
+}
+
+function organEmoji(name) {
+  const map = { kidney:'🫘', liver:'🫁', heart:'❤️', lung:'🫁', pancreas:'🫀', cornea:'👁️', skin:'🩹', bone_marrow:'🦴', intestine:'🔁' };
+  return map[name] || '🫀';
+}
+
+function showOrganForm() {
+  const panel = document.getElementById('organFormPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function addOrganFromDashboard() {
+  const organ_name = document.getElementById('ddNewOrgan').value;
+  const blood_group = document.getElementById('ddNewBlood').value;
+  const health_report = document.getElementById('ddNewHealth').value.trim();
+  const stateVal = document.getElementById('ddNewState').value.trim();
+  const cityVal = document.getElementById('ddNewCity').value.trim();
+  const hospStr = document.getElementById('ddNewHospitals').value.trim();
+  if (!organ_name||!blood_group||!health_report) { toast('Please fill required fields.', 'error'); return; }
+  const hospitals_selected = hospStr ? hospStr.split(',').map(h=>h.trim()).filter(Boolean) : [];
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await apiCall('/donors/organs', 'POST', {
+      organ_name, blood_group, health_report,
+      hospitals_selected: hospitals_selected.length ? hospitals_selected : ['Any hospital'],
+      state: stateVal || 'Not specified', city: cityVal || 'Not specified'
+    });
+    toast('Organ registered!', 'success');
+    document.getElementById('organFormPanel').style.display = 'none';
+    loadDonorDashboard();
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Register Organ'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   RECEIVER LOGIN & REGISTER
+════════════════════════════════════════════════════════ */
+async function receiverLogin() {
+  const email = document.getElementById('rLoginEmail').value.trim();
+  const password = document.getElementById('rLoginPass').value;
+  if (!email||!password) { toast('Please fill all fields.', 'error'); return; }
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const data = await apiCall('/auth/login/receiver', 'POST', { email, password });
+    saveAuth(data);
+    navigate('receiver-dashboard');
+    toast(`Welcome, ${data.name}!`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In as Receiver'; }
+}
+
+async function receiverRegister() {
+  const name = document.getElementById('rName').value.trim();
+  const age = document.getElementById('rAge').value;
+  const father_name = document.getElementById('rFather').value.trim();
+  const email = document.getElementById('rEmail').value.trim();
+  const password = document.getElementById('rPass').value;
+  const confirm = document.getElementById('rPassConfirm').value;
+  const contact = document.getElementById('rPhone').value.trim();
+  const st = document.getElementById('rState').value.trim();
+  const city = document.getElementById('rCity').value.trim();
+  const aadhaar = document.getElementById('rAadhaar').value.trim();
+  const pan = document.getElementById('rPan').value.trim().toUpperCase();
+  const aadhaarFile = document.getElementById('rAadhaarFile').files[0];
+  const panFile = document.getElementById('rPanFile').files[0];
+  const medFile = document.getElementById('rMedFile').files[0];
+
+  if (!name||!age||!father_name||!email||!password||!contact||!st||!city) {
+    toast('Please fill all required fields.', 'error'); return;
+  }
+  if (!/^[0-9]{10}$/.test(contact)) { toast('Phone number must be exactly 10 digits.', 'error'); return; }
+  if (password !== confirm) { toast('Passwords do not match.', 'error'); return; }
+  if (!aadhaarFile||!panFile||!medFile) { toast('Please upload all 3 documents.', 'error'); return; }
+
+  const fd = new FormData();
+  fd.append('name', name); fd.append('age', age); fd.append('father_name', father_name);
+  fd.append('email', email); fd.append('password', password); fd.append('contact_number', contact);
+  fd.append('state', st); fd.append('city', city);
+  if (aadhaar) fd.append('aadhaar_number', aadhaar);
+  if (pan) fd.append('pan_number', pan);
+  fd.append('aadhaar_file', aadhaarFile);
+  fd.append('pan_file', panFile);
+  fd.append('medical_file', medFile);
+
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Registering...';
+  try {
+    await apiCall('/receivers/register', 'POST', fd, true);
+    const loginData = await apiCall('/auth/login/receiver', 'POST', { email, password });
+    saveAuth(loginData);
+    navigate('receiver-dashboard');
+    toast('Registered successfully! You can now search for donors.', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Register as Receiver'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   RECEIVER DASHBOARD / SEARCH
+════════════════════════════════════════════════════════ */
+async function loadReceiverProfile() {
+  try {
+    const data = await apiCall('/receivers/profile');
+    document.getElementById('rdName').textContent = data.data.name.split(' ')[0];
+  } catch(e) { /* silently fail */ }
+}
+
+async function searchDonors(dir) {
+  if (dir === 'prev') state.searchPage = Math.max(1, state.searchPage - 1);
+  if (dir === 'next') state.searchPage++;
+
+  const organ_type = document.getElementById('sOrgan').value;
+  const blood_group = document.getElementById('sBlood').value;
+  if (!organ_type || !blood_group) { toast('Please select organ and blood group.', 'error'); return; }
+
+  const payload = {
+    organ_type, blood_group,
+    verified_donor: document.getElementById('sVerified').value || 'all',
+    state: document.getElementById('sState').value.trim() || null,
+    city: document.getElementById('sCity').value.trim() || null,
+    hospital_name: document.getElementById('sHospital').value.trim() || null,
+    page: state.searchPage,
+    page_size: state.searchPageSize,
+  };
+
+  const btn = document.querySelector('#page-receiver-dashboard .btn-sage');
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+  document.getElementById('searchResults').innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const data = await apiCall('/receivers/search', 'POST', payload);
+    const items = data.data?.items || data.data || [];
+    const pagination = data.data?.pagination;
+    if (pagination) { state.searchTotal = pagination.total; }
+    renderSearchResults(items, pagination);
+  } catch(e) { 
+    document.getElementById('searchResults').innerHTML = `<div class="empty-state"><div class="empty-icon">😕</div><p>${e.message}</p></div>`;
+  }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Search Donors'; } }
+}
+
+function renderSearchResults(items, pagination) {
+  const el = document.getElementById('searchResults');
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>No donors found matching your criteria. Try broader filters.</p></div>';
+    document.getElementById('searchPagination').style.display = 'none';
+    return;
+  }
+  const statusColors = { legal: 'approved', illegal: 'rejected', pending: 'pending' };
+  const statusLabels = { legal: '✓ Verified', illegal: '✗ Unverified', pending: '⏳ Pending' };
+  el.innerHTML = items.map(d => `
+    <div class="result-card">
+      <div class="result-organ-badge">${organEmoji(d.organ)}</div>
+      <div>
+        <div class="result-name">${d.donor_name}</div>
+        <div class="result-meta">
+          <span>${d.organ.replace('_',' ')} · ${d.blood_group}</span>
+          <span>${d.city}, ${d.state}</span>
+          <span>${d.father_name ? 'S/O ' + d.father_name : ''}</span>
+        </div>
+        <div style="margin-top:8px">
+          <span class="status-badge ${statusColors[d.verification_status]}" style="font-size:11px">${statusLabels[d.verification_status]}</span>
+          ${d.hospital_verified_by ? `<span style="font-size:12px;color:var(--sage);margin-left:8px">🏥 ${d.hospital_verified_by}</span>` : ''}
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:var(--ink-subtle)">🆔 Aadhaar: ${d.aadhaar_number_masked}</div>
+      </div>
+      <div class="result-contact">
+        <strong>📞 ${d.contact_number}</strong>
+        <div style="margin-top:4px;font-size:12px">${d.full_address ? d.full_address.substring(0,40)+'...' : ''}</div>
+      </div>
+    </div>`).join('');
+
+  if (pagination) {
+    document.getElementById('searchPagination').style.display = 'flex';
+    document.getElementById('sPageInfo').textContent = `Page ${pagination.page} of ${pagination.total_pages} (${pagination.total} results)`;
+    document.getElementById('sPrevBtn').disabled = !pagination.has_prev;
+    document.getElementById('sNextBtn').disabled = !pagination.has_next;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   ADMIN LOGIN & REGISTER
+════════════════════════════════════════════════════════ */
+async function adminLogin() {
+  const email = document.getElementById('aLoginEmail').value.trim();
+  const password = document.getElementById('aLoginPass').value;
+  const hospital_code = document.getElementById('aLoginCode').value.trim();
+  if (!email||!password||!hospital_code) { toast('Please fill all fields.', 'error'); return; }
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const data = await apiCall('/auth/login/admin', 'POST', { email, password, hospital_code });
+    saveAuth(data);
+    navigate('admin-dashboard');
+    toast(`Welcome, ${data.name}!`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In as Admin'; }
+}
+
+async function adminRegister() {
+  const name = document.getElementById('aName').value.trim();
+  const email = document.getElementById('aEmail').value.trim();
+  const password = document.getElementById('aPass').value;
+  const contact_number = document.getElementById('aPhone').value.trim();
+  const hospital_name = document.getElementById('aHospName').value.trim();
+  const hospital_registration_number = document.getElementById('aHospReg').value.trim();
+  const hospital_state = document.getElementById('aHospState').value.trim();
+  const hospital_city = document.getElementById('aHospCity').value.trim();
+  const hospital_address = document.getElementById('aHospAddr').value.trim();
+  const hospital_contact = document.getElementById('aHospContact').value.trim();
+  if (!name||!email||!password||!contact_number||!hospital_name||!hospital_registration_number||!hospital_state||!hospital_city||!hospital_address||!hospital_contact) {
+    toast('Please fill all required fields.', 'error'); return;
+  }
+  if (!/^[0-9]{10}$/.test(contact_number)) { toast('Admin phone number must be exactly 10 digits.', 'error'); return; }
+  if (!/^[0-9]{10}$/.test(hospital_contact)) { toast('Hospital contact number must be exactly 10 digits.', 'error'); return; }
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Registering...';
+  try {
+    await apiCall('/auth/register/admin', 'POST', {
+      name, email, password, contact_number, hospital_name,
+      hospital_registration_number, hospital_state, hospital_city, hospital_address, hospital_contact
+    });
+    switchTab('admin','login');
+    toast('Hospital registered! You can now sign in.', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Register Hospital'; }
+}
+
+/* ════════════════════════════════════════════════════════
+   ADMIN DASHBOARD
+════════════════════════════════════════════════════════ */
+async function loadAdminOverview() {
+  try {
+    const profData = await apiCall('/admin/hospital/profile');
+    const p = profData.data;
+    document.getElementById('adminHospName').textContent = p.name || 'Hospital';
+    document.getElementById('adminHospCity').textContent = `${p.city || ''}, ${p.state || ''}`;
+    document.getElementById('mApproved').textContent = p.total_approvals ?? '—';
+    document.getElementById('mRejected').textContent = p.total_rejections ?? '—';
+  } catch(e) {}
+
+  try {
+    const donors = await apiCall('/admin/donors?page=1&page_size=3&status_filter=pending');
+    const items = donors.data?.items || donors.data || [];
+    document.getElementById('adminRecentList').innerHTML = items.length === 0
+      ? '<div class="empty-state" style="padding:30px"><div class="empty-icon">✅</div><p>No pending donors!</p></div>'
+      : `<table><thead><tr><th>Name</th><th>Status</th><th>Registered</th><th>Action</th></tr></thead>
+         <tbody>${items.map(d => `
+           <tr>
+             <td><strong>${d.name}</strong></td>
+             <td><span class="status-badge ${d.status}">${d.status}</span></td>
+             <td style="font-size:12px;color:var(--ink-subtle)">${new Date(d.created_at).toLocaleDateString('en-IN')}</td>
+             <td><button class="action-btn view" onclick="openDonorDetail('${d.donor_id}')">View</button></td>
+           </tr>`).join('')}
+         </tbody></table>`;
+    document.getElementById('mPending').textContent = donors.data?.pagination?.total ?? items.length;
+    document.getElementById('mTotal').textContent = '—';
+  } catch(e) {}
+}
+
+function adminSection(sec, el) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+
+  document.getElementById('adminSec-overview').style.display = 'none';
+  document.getElementById('adminSec-donors').style.display = 'none';
+
+  if (sec === 'overview') {
+    document.getElementById('adminSec-overview').style.display = 'block';
+    loadAdminOverview();
+  } else {
+    document.getElementById('adminSec-donors').style.display = 'block';
+    const filterMap = { 'donors-all':'all', 'donors-pending':'pending', 'donors-approved':'approved', 'donors-rejected':'rejected' };
+    state.adminFilter = filterMap[sec] || 'all';
+    state.adminPage = 1;
+    loadAdminDonors();
+  }
+}
+
+async function loadAdminDonors() {
+  const filter = state.adminFilter;
+  document.getElementById('donorTableBody').innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+  try {
+    const data = await apiCall(`/admin/donors?page=${state.adminPage}&page_size=10&status_filter=${filter}`);
+    const items = data.data?.items || data.data || [];
+    const pagination = data.data?.pagination;
+
+    if (items.length === 0) {
+      document.getElementById('donorTableBody').innerHTML = '<tr><td colspan="6"><div class="empty-state" style="padding:30px"><p>No donors found.</p></div></td></tr>';
+    } else {
+      document.getElementById('donorTableBody').innerHTML = items.map(d => `
+        <tr>
+          <td><strong>${d.name}</strong><div style="font-size:12px;color:var(--ink-subtle)">${d.email || d.city || ''}</div></td>
+          <td>${d.age || '—'}</td>
+          <td>${d.city || '—'}, ${d.state || ''}</td>
+          <td><span class="status-badge ${d.status}">${d.status}</span></td>
+          <td style="font-size:12px;color:var(--ink-subtle)">${d.created_at ? new Date(d.created_at).toLocaleDateString('en-IN') : '—'}</td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="action-btn view" onclick="openDonorDetail('${d.donor_id}')">Detail</button>
+            ${d.status==='pending' ? `<button class="action-btn approve" onclick="quickApprove('${d.donor_id}')">Approve</button>
+            <button class="action-btn reject" onclick="openReject('${d.donor_id}')">Reject</button>` : ''}
+          </td>
+        </tr>`).join('');
+    }
+
+    if (pagination) {
+      document.getElementById('adminPaginationInfo').textContent = `${pagination.total} total donors`;
+      document.getElementById('adminCurPage').textContent = pagination.page;
+      document.getElementById('adminPrevBtn').disabled = !pagination.has_prev;
+      document.getElementById('adminNextBtn').disabled = !pagination.has_next;
+    }
+  } catch(e) { toast('Could not load donors: ' + e.message, 'error'); }
+}
+
+function adminPaginate(dir) {
+  state.adminPage = Math.max(1, state.adminPage + dir);
+  loadAdminDonors();
+}
+
+function filterDonors(f, el) {
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  state.adminFilter = f;
+  state.adminPage = 1;
+  loadAdminDonors();
+}
+
+/* DONOR DETAIL MODAL */
+async function openDonorDetail(donorId) {
+  state.adminCurrentDonorId = donorId;
+  document.getElementById('donorDetailBody').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('donorDetailModal').classList.add('open');
+  try {
+    const data = await apiCall(`/admin/donors/${donorId}`);
+    const d = data.data;
+    document.getElementById('donorDetailBody').innerHTML = `
+      <div class="donor-detail-grid">
+        <div class="detail-item"><label>Full Name</label><span>${d.name}</span></div>
+        <div class="detail-item"><label>Age</label><span>${d.age} years</span></div>
+        <div class="detail-item"><label>Father's Name</label><span>${d.father_name}</span></div>
+        <div class="detail-item"><label>Email</label><span>${d.email}</span></div>
+        <div class="detail-item"><label>Phone</label><span>${d.contact_number}</span></div>
+        <div class="detail-item"><label>Location</label><span>${d.city}, ${d.state}</span></div>
+        <div class="detail-item"><label>Aadhaar</label><span>${d.aadhaar_number || '—'}</span></div>
+        <div class="detail-item"><label>PAN</label><span>${d.pan_number || '—'}</span></div>
+        <div class="detail-item"><label>Status</label><span class="status-badge ${d.status}">${d.status}</span></div>
+        <div class="detail-item"><label>Verified</label><span>${d.verified ? '✅ Yes' : '❌ No'}</span></div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="form-section-label" style="margin-top:0">Address</div>
+        <p style="font-size:14px;color:var(--ink-muted)">${d.full_address || '—'}</p>
+      </div>
+      ${d.organ_registrations && d.organ_registrations.length > 0 ? `
+        <div style="margin-top:16px">
+          <div class="form-section-label" style="margin-top:0">Registered Organs</div>
+          ${d.organ_registrations.map(o => `<span class="organ-tag available">${organEmoji(o.organ_name)} ${o.organ_name.replace('_',' ')} · ${o.blood_group}</span>`).join('')}
+        </div>` : ''}
+      <div class="doc-links" style="margin-top:16px">
+        ${d.aadhaar_card_url ? `<a class="doc-link" href="${d.aadhaar_card_url}" target="_blank">📄 Aadhaar Card</a>` : ''}
+        ${d.pan_card_url ? `<a class="doc-link" href="${d.pan_card_url}" target="_blank">📄 PAN Card</a>` : ''}
+        ${d.medical_report_url ? `<a class="doc-link" href="${d.medical_report_url}" target="_blank">🩺 Medical Report</a>` : ''}
+      </div>`;
+    // Show action buttons only if pending
+    document.getElementById('modalApproveBtn').style.display = d.status === 'pending' ? 'inline-flex' : 'none';
+    document.getElementById('modalRejectBtn').style.display = d.status === 'pending' ? 'inline-flex' : 'none';
+  } catch(e) {
+    document.getElementById('donorDetailBody').innerHTML = `<div class="empty-state"><p>Could not load donor details: ${e.message}</p></div>`;
+  }
+}
+
+document.getElementById('modalApproveBtn').onclick = () => quickApprove(state.adminCurrentDonorId);
+document.getElementById('modalRejectBtn').onclick = () => { closeModal('donorDetailModal'); openReject(state.adminCurrentDonorId); };
+
+async function quickApprove(donorId) {
+  try {
+    await apiCall('/admin/donors/approve', 'POST', { donor_id: donorId, notes: 'All documents verified.' });
+    toast('Donor approved successfully!', 'success');
+    closeModal('donorDetailModal');
+    loadAdminDonors();
+    loadAdminOverview();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openReject(donorId) {
+  state.adminCurrentDonorId = donorId;
+  document.getElementById('rejectReasonInput').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+}
+
+async function submitReject() {
+  const reason = document.getElementById('rejectReasonInput').value.trim();
+  if (reason.length < 10) { toast('Please provide a detailed reason (min 10 chars).', 'error'); return; }
+  try {
+    await apiCall('/admin/donors/reject', 'POST', { donor_id: state.adminCurrentDonorId, rejection_reason: reason });
+    toast('Donor rejected.', 'info');
+    closeModal('rejectModal');
+    loadAdminDonors();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   MODAL HELPERS
+════════════════════════════════════════════════════════ */
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+/* ════════════════════════════════════════════════════════
+   AUTH HELPERS
+════════════════════════════════════════════════════════ */
+function saveAuth(data) {
+  state.token = data.access_token;
+  state.role = data.role;
+  state.userName = data.name;
+  localStorage.setItem('ol_token', data.access_token);
+  localStorage.setItem('ol_role', data.role);
+  localStorage.setItem('ol_name', data.name);
+}
+
+/* ════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════ */
+(function init() {
+  updateNav();
+  // If already logged in, redirect to correct dashboard
+  if (state.token && state.role) {
+    const roleMap = { donor: 'donor-dashboard', receiver: 'receiver-dashboard', hospital_admin: 'admin-dashboard' };
+    const dest = roleMap[state.role];
+    if (dest) navigate(dest);
+  }
+  // Animated stats (placeholder — replace with real counts if you add a /stats endpoint)
+  animateCount('stat-donors', 2847);
+  animateCount('stat-verified', 1203);
+})();
+
+function animateCount(id, target) {
+  let current = 0;
+  const step = Math.ceil(target / 60);
+  const el = document.getElementById(id);
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = current.toLocaleString('en-IN');
+    if (current >= target) clearInterval(timer);
+  }, 24);
+}
+</script>
+</body>
+</html>
