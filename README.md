@@ -13,7 +13,7 @@ OrgoLife is a full-stack web application designed to connect organ donors and re
 ## 🛠 Tech Stack
 - Frontend: HTML, CSS, JavaScript
 - Backend: FastAPI (Python)
-- Database: SQLite / MongoDB
+- Database: SQLite / Supabase
 - Tools: Git, GitHub, Ngrok
 
 ## 📂 Project Structure
