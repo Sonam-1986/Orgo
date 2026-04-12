@@ -105,3 +105,55 @@ async def reject_donor(
         rejection_reason=payload.rejection_reason,
     )
     return BaseResponse(message=result["message"], data=result)
+
+
+@router.get(
+    "/receivers",
+    response_model=BaseResponse,
+    summary="List All Receivers",
+)
+async def list_receivers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    status_filter: str = Query("all", pattern=r"^(all|pending|approved|rejected)$"),
+    current_user: dict = Depends(require_admin),
+):
+    result = await admin_service.list_all_receivers(
+        admin_user_id=current_user["sub"],
+        page=page,
+        page_size=page_size,
+        status_filter=status_filter,
+    )
+    return BaseResponse(data=result)
+
+
+@router.post("/donors/{donor_id}/approve", response_model=BaseResponse)
+async def approve_donor_v2(donor_id: str, current_user: dict = Depends(require_admin)):
+    result = await admin_service.approve_donor(current_user["sub"], donor_id)
+    return BaseResponse(message="Donor approved", data=result)
+
+
+@router.post("/donors/{donor_id}/reject", response_model=BaseResponse)
+async def reject_donor_v2(donor_id: str, current_user: dict = Depends(require_admin)):
+    result = await admin_service.reject_donor(current_user["sub"], donor_id, rejection_reason="Administrative rejection")
+    return BaseResponse(message="Donor rejected", data=result)
+
+
+@router.post("/receivers/{receiver_id}/approve", response_model=BaseResponse)
+async def approve_receiver_route(receiver_id: str, current_user: dict = Depends(require_admin)):
+    result = await admin_service.approve_receiver(current_user["sub"], receiver_id)
+    return BaseResponse(message="Receiver approved", data=result)
+
+
+@router.post("/receivers/{receiver_id}/reject", response_model=BaseResponse)
+async def reject_receiver_route(receiver_id: str, current_user: dict = Depends(require_admin)):
+    result = await admin_service.reject_receiver(current_user["sub"], receiver_id)
+    return BaseResponse(message="Receiver rejected", data=result)
+@router.get(
+    "/stats",
+    response_model=BaseResponse,
+    summary="Get Platform-wide Stats",
+)
+async def get_stats(current_user: dict = Depends(require_admin)):
+    stats = await admin_service.get_platform_stats(current_user["sub"])
+    return BaseResponse(data=stats)

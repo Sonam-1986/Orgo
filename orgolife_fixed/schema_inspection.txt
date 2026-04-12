@@ -1,0 +1,9 @@
+
+--- donors ---
+['id', 'user_id', 'age', 'father_name', 'state', 'city', 'full_address', 'aadhaar_card_path', 'pan_card_path', 'medical_report_path', 'aadhaar_number', 'pan_number', 'verified', 'status', 'verified_by_hospital', 'verified_by_admin_id', 'rejection_reason', 'created_at', 'updated_at']
+--- receivers ---
+['id', 'user_id', 'age', 'father_name', 'state', 'city', 'aadhaar_card_path', 'pan_card_path', 'medical_report_path', 'aadhaar_number', 'pan_number', 'is_active', 'created_at', 'updated_at', 'status', 'verified_by_hospital', 'verified_by_admin_id']
+--- hospitals ---
+['id', 'admin_user_id', 'name', 'state', 'city', 'address', 'contact_number', 'registration_number', 'specializations', 'is_active', 'total_approvals', 'total_rejections', 'created_at', 'updated_at']
+--- users ---
+['id', 'name', 'email', 'password', 'role', 'contact_number', 'status', 'is_verified_email', 'created_at', 'updated_at']

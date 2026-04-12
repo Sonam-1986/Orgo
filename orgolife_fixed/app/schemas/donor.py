@@ -16,38 +16,23 @@ class DonorSignupStep1(BaseModel):
     Sent as multipart/form-data alongside file uploads.
     All fields are strings here because HTML forms send strings.
     """
-    name: str = Field(..., min_length=2, max_length=100)
     age: int = Field(..., ge=18, le=70, description="Donor must be 18–70")
     father_name: str = Field(..., min_length=2, max_length=100)
-    email: EmailStr
-    password: str = Field(..., min_length=8, max_length=64)
-    contact_number: str = Field(..., pattern=r"^[0-9]{10}$", description="10-digit mobile number")
     state: str = Field(..., min_length=2, max_length=100)
     city: str = Field(..., min_length=2, max_length=100)
     full_address: str = Field(..., min_length=5, max_length=500)
     aadhaar_number: Optional[str] = Field(None, pattern=r"^\d{12}$")
     pan_number: Optional[str] = Field(None, pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$")
 
-    @field_validator("password")
     @classmethod
-    def password_strength(cls, v: str) -> str:
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not re.search(r"[0-9]", v):
-            raise ValueError("Password must contain at least one digit.")
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Password must contain at least one special character.")
-        return v
+    def no_op(cls):
+        pass
 
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "Rajesh Kumar",
                 "age": 35,
                 "father_name": "Ramesh Kumar",
-                "email": "rajesh@example.com",
-                "password": "SecurePass123!",
-                "contact_number": "9876543210",
                 "state": "Maharashtra",
                 "city": "Mumbai",
                 "full_address": "123 MG Road, Andheri West",

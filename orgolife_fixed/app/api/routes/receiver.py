@@ -7,7 +7,7 @@ Receiver routes:
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from typing import Optional
 
-from app.core.dependencies import require_receiver
+from app.core.dependencies import require_receiver, get_current_user
 from app.schemas.receiver import ReceiverSignupStep1, DonorSearchRequest
 from app.schemas.common import BaseResponse
 from app.services import receiver_service
@@ -22,14 +22,12 @@ router = APIRouter(prefix="/receivers", tags=["Receivers"])
     summary="Register Receiver (multipart/form-data)",
 )
 async def register_receiver(
-    name: str = Form(...),
+    current_user: dict = Depends(get_current_user),
     age: int = Form(...),
     father_name: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    contact_number: str = Form(...),
     state: str = Form(...),
     city: str = Form(...),
+    organ_name: Optional[str] = Form(None),
     aadhaar_number: Optional[str] = Form(None),
     pan_number: Optional[str] = Form(None),
     aadhaar_file: UploadFile = File(...),
@@ -37,12 +35,12 @@ async def register_receiver(
     medical_file: UploadFile = File(...),
 ):
     data = ReceiverSignupStep1(
-        name=name, age=age, father_name=father_name,
-        email=email, password=password, contact_number=contact_number,
+        age=age, father_name=father_name,
         state=state, city=city,
+        organ_name=organ_name,
         aadhaar_number=aadhaar_number, pan_number=pan_number,
     )
-    result = await receiver_service.register_receiver(data, aadhaar_file, pan_file, medical_file)
+    result = await receiver_service.register_receiver(current_user["sub"], data, aadhaar_file, pan_file, medical_file)
     return BaseResponse(message=result["message"], data=result)
 
 
@@ -53,7 +51,7 @@ async def register_receiver(
 )
 async def search_donors(
     payload: DonorSearchRequest,
-    current_user: dict = Depends(require_receiver),
+    current_user: dict = Depends(get_current_user),
 ):
     result = await receiver_service.search_donors(payload)
     return BaseResponse(data=result)

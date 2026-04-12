@@ -1,5 +1,5 @@
 """
-Organ registration model — stored in 'organ_registrations' collection.
+Organ registration model — stored in 'organ_registrations' table.
 One donor can register multiple organs.
 """
 from datetime import datetime, timezone
@@ -40,8 +40,8 @@ def organ_registration_document(
     state: str,
     city: str,
 ) -> dict:
-    """Factory for organ_registrations collection document."""
-    now = datetime.now(timezone.utc)
+    """Factory for organ_registrations table."""
+    now = datetime.now(timezone.utc).isoformat()
     return {
         "donor_id": donor_id,
         "user_id": user_id,

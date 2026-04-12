@@ -6,14 +6,13 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.db.database import connect_db, close_db
-from app.db.indexes import create_indexes
 from app.middleware.error_handler import register_exception_handlers
 from app.middleware.logging_middleware import RequestLoggingMiddleware
 from app.api.routes import admin, receiver
@@ -31,12 +30,11 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "frontend")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 OrgoLife backend starting up...")
+    logger.info("[STARTUP] OrgoLife backend starting up...")
     await connect_db()
-    await create_indexes()
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     yield
-    logger.info("🛑 OrgoLife backend shutting down...")
+    logger.info("[SHUTDOWN] OrgoLife backend shutting down...")
     await close_db()
 
 
@@ -82,6 +80,10 @@ app.include_router(admin.router,        prefix=PREFIX)
 @app.get("/health", tags=["System"])
 async def health():
     return {"status": "healthy", "version": settings.APP_VERSION}
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
 
 # ── Serve frontend ────────────────────────────────────────────────
 # Mount static assets from frontend/ directory (CSS, JS, images if any)

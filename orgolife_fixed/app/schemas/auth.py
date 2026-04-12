@@ -9,6 +9,31 @@ from app.models.user import UserRole
 
 # ── Request schemas ──────────────────────────────────────────────
 
+class UserSignup(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=64)
+    contact_number: str = Field(..., pattern=r"^[0-9\-\+\s]{8,20}$", description="Contact phone number (8-20 chars)")
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not re.search(r"[0-9]", v):
+            raise ValueError("Password must contain at least one digit.")
+        return v
+        
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Arjun Singh",
+                "email": "arjun@example.com",
+                "password": "SecurePass123!",
+                "contact_number": "9876543210"
+            }
+        }
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)

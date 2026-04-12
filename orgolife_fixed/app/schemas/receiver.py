@@ -10,35 +10,23 @@ from app.models.organ import OrganName, BloodGroup
 # ── Step 1: Receiver Signup ───────────────────────────────────────
 
 class ReceiverSignupStep1(BaseModel):
-    name: str = Field(..., min_length=2, max_length=100)
     age: int = Field(..., ge=1, le=120)
     father_name: str = Field(..., min_length=2, max_length=100)
-    email: EmailStr
-    password: str = Field(..., min_length=8, max_length=64)
-    contact_number: str = Field(..., pattern=r"^[0-9]{10}$", description="10-digit mobile number")
+    organ_name: Optional[str] = Field(None, min_length=2, max_length=100)
     state: str = Field(..., min_length=2, max_length=100)
     city: str = Field(..., min_length=2, max_length=100)
     aadhaar_number: Optional[str] = Field(None, pattern=r"^\d{12}$")
     pan_number: Optional[str] = Field(None, pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$")
 
-    @field_validator("password")
     @classmethod
-    def password_strength(cls, v: str) -> str:
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not re.search(r"[0-9]", v):
-            raise ValueError("Password must contain at least one digit.")
-        return v
+    def no_op(cls):
+        pass
 
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "Priya Sharma",
                 "age": 28,
                 "father_name": "Suresh Sharma",
-                "email": "priya@example.com",
-                "password": "SecurePass123!",
-                "contact_number": "9876543211",
                 "state": "Maharashtra",
                 "city": "Pune"
             }

@@ -1,12 +1,9 @@
-"""
-File service — abstracts save/retrieve for uploaded documents.
-Uses local disk storage (cloud-ready: swap save logic for S3/GCS).
-"""
-import os
-import uuid
 import logging
+import uuid
+import os
 import aiofiles
 from fastapi import UploadFile, HTTPException, status
+from app.db.database import get_database
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -34,56 +31,74 @@ def _sniff_mime(header: bytes) -> str:
 
 async def save_upload(
     file: UploadFile,
-    sub_folder: str,
+    bucket: str,
     user_id: str,
     field_name: str,
 ) -> str:
     """
-    Validate and persist an uploaded file to disk.
-    Returns relative path stored in DB.
-    Raises HTTPException on type/size violations.
+    Validate and upload file to Supabase Storage.
+    Returns the cloud path (e.g. 'user_id/filename.pdf').
     """
     content = await file.read()
     size = len(content)
 
-    # ── Size guard ────────────────────────────────────────────────
     if size == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"'{field_name}' file is empty."
-        )
+        raise HTTPException(status_code=400, detail="File is empty")
     if size > settings.max_file_size_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=(
-                f"'{field_name}': {size / 1048576:.2f} MB exceeds "
-                f"the {settings.MAX_FILE_SIZE_MB} MB limit."
-            )
-        )
+        raise HTTPException(status_code=413, detail="File too large")
 
-    # ── Magic byte MIME detection ─────────────────────────────────
     mime = _sniff_mime(content[:4])
     if mime == "unknown":
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=f"'{field_name}': Unsupported file type. Allowed: PDF, JPG, PNG."
-        )
+        raise HTTPException(status_code=415, detail="Unsupported file type")
 
     ext = MIME_TO_EXT[mime]
-    uid = uuid.uuid4().hex[:10]
-    filename = f"{user_id}_{field_name}_{uid}.{ext}"
-    dir_path = os.path.join(settings.UPLOAD_DIR, sub_folder)
-    os.makedirs(dir_path, exist_ok=True)
-    file_path = os.path.join(dir_path, filename)
+    uid = uuid.uuid4().hex[:6]
+    filename = f"{field_name}_{uid}.{ext}"
+    cloud_path = f"{user_id}/{filename}"
 
-    # ── Async write ───────────────────────────────────────────────
-    async with aiofiles.open(file_path, "wb") as out:
-        await out.write(content)
+    try:
+        supabase = get_database()
+        # Try Cloud Upload First
+        res = supabase.storage.from_(bucket).upload(
+            path=cloud_path,
+            file=content,
+            file_options={"content-type": mime}
+        )
+        logger.info(f"Cloud Upload Success [{bucket}]: {cloud_path}")
+        return cloud_path
+    except Exception as e:
+        logger.warning(f"Cloud storage failed (Bucket '{bucket}' likely missing). Falling back to local disk. Error: {e}")
+        
+        # LOCAL FALLBACK
+        dir_path = os.path.join(settings.UPLOAD_DIR, bucket)
+        os.makedirs(dir_path, exist_ok=True)
+        local_filename = f"{user_id}_{field_name}_{uid}.{ext}"
+        local_path = os.path.join(dir_path, local_filename)
+        
+        async with aiofiles.open(local_path, "wb") as out:
+            await out.write(content)
+        
+        logger.info(f"Local Fallback Success: {local_path}")
+        return local_path
 
-    logger.info(f"Saved file: {file_path} ({size} bytes, {mime})")
-    return file_path
+
+def get_signed_url(bucket: str, path: str, expires_in: int = 3600) -> str:
+    """Generate signed URL with fallback for local files."""
+    if not path: return ""
+    
+    # Check if this is a local path (contains directory separators or doesn't follow cloud pattern)
+    if "uploads" in path or os.path.isabs(path) or "\\" in path or "/" in path and not path.split("/")[0].isalnum():
+        return "/" + path.replace("\\", "/")
+
+    try:
+        supabase = get_database()
+        res = supabase.storage.from_(bucket).create_signed_url(path, expires_in)
+        return res.get("signedURL") or ""
+    except Exception as e:
+        # Final fallback: return the original path as a local URL
+        return "/" + path.replace("\\", "/")
 
 
 def file_url(path: str) -> str:
-    """Convert local path → URL path for API responses."""
-    return "/" + path.replace("\\", "/")
+    """Legacy helper — now returns path if URL signature not needed at this layer."""
+    return path

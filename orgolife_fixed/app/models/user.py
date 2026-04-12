@@ -4,10 +4,10 @@ User model — shared base for Donor, Receiver, Hospital Admin.
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
-from bson import ObjectId
 
 
 class UserRole(str, Enum):
+    USER = "user"
     DONOR = "donor"
     RECEIVER = "receiver"
     HOSPITAL_ADMIN = "hospital_admin"
@@ -25,15 +25,17 @@ def user_document(
     hashed_password: str,
     role: UserRole,
     contact_number: str,
+    hospital_id: Optional[str] = None,
 ) -> dict:
-    """Factory — returns a ready-to-insert MongoDB user document."""
-    now = datetime.now(timezone.utc)
+    """Factory — returns a ready-to-insert user dictionary for Supabase."""
+    now = datetime.now(timezone.utc).isoformat()
     return {
         "name": name,
         "email": email.lower().strip(),
         "password": hashed_password,
         "role": role,
         "contact_number": contact_number,
+        "hospital_id": hospital_id,
         "status": UserStatus.ACTIVE,
         "is_verified_email": False,
         "created_at": now,

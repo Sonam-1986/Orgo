@@ -1,6 +1,8 @@
 """
-Hospital model — stored in 'hospitals' collection.
+Hospital model — stored in 'hospitals' table.
 Hospital Admins are linked here.
+
+NOTE: Only includes columns confirmed to exist in the live Supabase DB.
 """
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -8,7 +10,7 @@ from typing import List, Optional
 
 def hospital_document(
     name: str,
-    admin_user_id: str,
+    admin_user_id: Optional[str],
     state: str,
     city: str,
     address: str,
@@ -16,16 +18,14 @@ def hospital_document(
     registration_number: str,
     specializations: Optional[List[str]] = None,
 ) -> dict:
-    """Factory for hospitals collection document."""
-    now = datetime.now(timezone.utc)
+    """Factory for hospitals table — aligned with live schema (removed missing file paths)."""
+    now = datetime.now(timezone.utc).isoformat()
     return {
         "name": name,
         "admin_user_id": admin_user_id,
-        "address": {
-            "state": state,
-            "city": city,
-            "full_address": address,
-        },
+        "state": state,
+        "city": city,
+        "address": address,
         "contact_number": contact_number,
         "registration_number": registration_number,
         "specializations": specializations or [],

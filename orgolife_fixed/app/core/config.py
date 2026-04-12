@@ -3,7 +3,7 @@ Application configuration using Pydantic Settings.
 Reads from environment variables / .env file.
 """
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import AnyHttpUrl, field_validator
 
@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"
     API_V1_PREFIX: str = "/api/v1"
 
-    # ── MongoDB ──────────────────────────────────────────────────
-    MONGODB_URL: str = "mongodb://localhost:27017"
-    DATABASE_NAME: str = "organ_donation_db"
+    # ── Supabase ─────────────────────────────────────────────────
+    SUPABASE_URL: str = "https://your-project.supabase.co"
+    SUPABASE_KEY: str = "your-anon-or-service-role-key"
 
     # ── JWT ──────────────────────────────────────────────────────
     JWT_SECRET_KEY: str = "change-this-secret-key-in-production"
@@ -35,7 +35,11 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
 
     # ── Rate Limiting ────────────────────────────────────────────
+    # ── Rate Limiting ────────────────────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 60
+
+    # ── Database Sync (Direct Postgres) ──────────────────────────
+    DATABASE_URL: Optional[str] = None
 
     @property
     def allowed_file_types_list(self) -> List[str]:
@@ -52,6 +56,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 @lru_cache()

@@ -8,7 +8,7 @@ Donor routes:
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from typing import Optional
 
-from app.core.dependencies import require_donor
+from app.core.dependencies import require_donor, get_current_user
 from app.schemas.donor import DonorSignupStep1, OrganRegistrationRequest
 from app.schemas.common import BaseResponse
 from app.services import donor_service
@@ -24,12 +24,9 @@ router = APIRouter(prefix="/donors", tags=["Donors"])
     summary="Register Donor (Step 1 — Profile + Documents)",
 )
 async def register_donor(
-    name: str = Form(...),
+    current_user: dict = Depends(get_current_user),
     age: int = Form(...),
     father_name: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    contact_number: str = Form(...),
     state: str = Form(...),
     city: str = Form(...),
     full_address: str = Form(...),
@@ -40,12 +37,11 @@ async def register_donor(
     medical_file: UploadFile = File(..., description="Medical report PDF/image"),
 ):
     data = DonorSignupStep1(
-        name=name, age=age, father_name=father_name,
-        email=email, password=password, contact_number=contact_number,
+        age=age, father_name=father_name,
         state=state, city=city, full_address=full_address,
         aadhaar_number=aadhaar_number, pan_number=pan_number,
     )
-    result = await donor_service.register_donor(data, aadhaar_file, pan_file, medical_file)
+    result = await donor_service.register_donor(current_user["sub"], data, aadhaar_file, pan_file, medical_file)
     return BaseResponse(message=result["message"], data=result)
 
 

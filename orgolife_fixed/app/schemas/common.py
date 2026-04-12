@@ -8,19 +8,6 @@ from datetime import datetime
 T = TypeVar("T")
 
 
-class PyObjectId(str):
-    """String representation of MongoDB ObjectId for Pydantic v2."""
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        from bson import ObjectId
-        if isinstance(v, str):
-            return str(v)
-        return str(v)
-
 
 class BaseResponse(BaseModel):
     """Standard success envelope."""

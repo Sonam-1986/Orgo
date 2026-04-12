@@ -12,13 +12,15 @@ class HospitalAdminSignup(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=64)
-    contact_number: str = Field(..., pattern=r"^[0-9]{10}$", description="10-digit mobile number")
+    contact_number: str = Field(..., pattern=r"^[0-9\-\+\s]{8,20}$", description="Admin contact number")
     hospital_name: str = Field(..., min_length=3, max_length=200)
     hospital_registration_number: str = Field(..., min_length=3, max_length=50)
     hospital_state: str = Field(..., min_length=2, max_length=100)
     hospital_city: str = Field(..., min_length=2, max_length=100)
     hospital_address: str = Field(..., min_length=5, max_length=500)
-    hospital_contact: str = Field(..., pattern=r"^[0-9]{10}$", description="10-digit contact number")
+    hospital_contact: str = Field(..., pattern=r"^[0-9\-\+\s]{8,20}$", description="Hospital landline or mobile")
+    aadhaar_number: Optional[str] = Field(None, description="12-digit Aadhaar number")
+    pan_number: Optional[str] = Field(None, description="PAN number format")
 
     class Config:
         json_schema_extra = {
@@ -40,23 +42,23 @@ class HospitalAdminSignup(BaseModel):
 # ── Verification Actions ──────────────────────────────────────────
 
 class ApproveDonorRequest(BaseModel):
-    donor_id: str = Field(..., description="MongoDB ObjectId of the donor")
+    donor_id: str = Field(..., description="Unique ID (UUID) of the donor")
     notes: Optional[str] = Field(None, max_length=500)
 
     class Config:
         json_schema_extra = {
-            "example": {"donor_id": "64abc123def456", "notes": "All documents verified."}
+            "example": {"donor_id": "d09a123-ef45-6789", "notes": "All documents verified."}
         }
 
 
 class RejectDonorRequest(BaseModel):
-    donor_id: str = Field(..., description="MongoDB ObjectId of the donor")
+    donor_id: str = Field(..., description="Unique ID (UUID) of the donor")
     rejection_reason: str = Field(..., min_length=10, max_length=500)
 
     class Config:
         json_schema_extra = {
             "example": {
-                "donor_id": "64abc123def456",
+                "donor_id": "d09a123-ef45-6789",
                 "rejection_reason": "Medical report is outdated (older than 6 months)."
             }
         }

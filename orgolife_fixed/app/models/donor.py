@@ -1,9 +1,11 @@
 """
-Donor model — profile document stored in 'donors' collection.
+Donor model — profile record stored in 'donors' table.
+
+NOTE: This model matches the live Supabase schema.
 """
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 
 class DonorStatus(str, Enum):
@@ -25,28 +27,24 @@ def donor_document(
     aadhaar_number: Optional[str] = None,
     pan_number: Optional[str] = None,
 ) -> dict:
-    """Factory for donors collection document."""
-    now = datetime.now(timezone.utc)
+    """Factory for donors table."""
+    now = datetime.now(timezone.utc).isoformat()
     return {
         "user_id": user_id,
         "age": age,
         "father_name": father_name,
-        "address": {
-            "state": state,
-            "city": city,
-            "full_address": full_address,
-        },
-        "documents": {
-            "aadhaar_card_path": aadhaar_card_path,
-            "pan_card_path": pan_card_path,
-            "medical_report_path": medical_report_path,
-        },
-        "aadhaar_number": aadhaar_number,  # stored encrypted in prod
+        "state": state,
+        "city": city,
+        "full_address": full_address,
+        "aadhaar_card_path": aadhaar_card_path,
+        "pan_card_path": pan_card_path,
+        "medical_report_path": medical_report_path,
+        "aadhaar_number": aadhaar_number,
         "pan_number": pan_number,
         "verified": False,
         "status": DonorStatus.PENDING,
-        "verified_by_hospital": None,       # hospital name on approval
-        "verified_by_admin_id": None,       # admin user_id on approval
+        "verified_by_hospital": None,
+        "verified_by_admin_id": None,
         "rejection_reason": None,
         "created_at": now,
         "updated_at": now,
