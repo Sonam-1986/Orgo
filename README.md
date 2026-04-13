@@ -26,5 +26,4 @@ OrgoLife is a full-stack web application designed to connect organ donors and re
 - Admin dashboard
 - AI-based donor matching
 
-## 👩‍💻 Author
-Sonam Sharma
+
